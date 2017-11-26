@@ -1,4 +1,4 @@
-import {AfterViewInit, ChangeDetectorRef, Component, ViewChild} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, Input, ViewChild} from '@angular/core';
 import {MatPaginator, MatSnackBar, MatSort} from '@angular/material';
 import 'rxjs/add/operator/startWith';
 import 'rxjs/add/observable/merge';
@@ -6,6 +6,18 @@ import 'rxjs/add/operator/map';
 import {ProdigyExamplesDataSource} from '../data-source/examples';
 import {SQLiteService} from '../sqlite.service';
 import {ProdigyExample} from '../prodigy.model';
+
+
+/** return a verb representation of the given answer value */
+export function verbify(answer: string, capitalize = true): string {
+  answer = answer.toLowerCase();
+  const isIgnore = answer === 'ignore';
+  if (capitalize) {
+    answer = answer[0].toUpperCase() + answer.slice(1);
+  }
+  return `${answer}${isIgnore ? 'd' : 'ed'}`;
+}
+
 
 /**
  * @title Table with pagination
@@ -28,7 +40,7 @@ export class ExamplesTableComponent implements AfterViewInit {
 
   @ViewChild(MatSort) sort: MatSort;
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @Input() paginator: MatPaginator;
 
   ngAfterViewInit() {
     this.dataSource = new ProdigyExamplesDataSource(this.sql, this.paginator);
@@ -41,9 +53,10 @@ export class ExamplesTableComponent implements AfterViewInit {
     }
     console.log('set row => ' + JSON.stringify(row, null, 2));
     console.log('        => ' + JSON.stringify(Object.keys(event), null, 2));
-    const answer = event.value[0].toUpperCase() + event.value.slice(1);
+    const to = verbify(event.value);
+    const from = verbify(row.content.answer);
     this.snackBar.open(
-      `${answer}${answer === 'Ignore' ? 'd' : 'ed'} item "${row.content.text}"`,
+      `Changed "${row.content.text}" from "${from}" to "${to}"`,
       'UNDO',
       {duration: 7000}
     );

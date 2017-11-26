@@ -1,11 +1,4 @@
 
-mat-paginator {
-    position: fixed;
-    padding: 12px;
-    bottom:0;
-    left:0;
-    right:0;
-}
 .mat-cell, .mat-header-cell {
     overflow: hidden;
     word-wrap: break-word;

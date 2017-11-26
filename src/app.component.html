@@ -1,5 +1,13 @@
+<mat-paginator #paginator
+               [style.left]="(compact?0:sidenavWidth)+'px'"
+               [length]="examples.dataSource?.count$ | async"
+               [pageIndex]="0"
+               [pageSize]="25"
+               [pageSizeOptions]="[5, 10, 25, 100]">
+</mat-paginator>
 <div fxFlexFill fxLayout="column">
-    <mat-toolbar color="primary">
+
+    <mat-toolbar color="primary" class="mat-elevation-z4">
         <button mat-icon-button (click)="sidenav.toggle()">
             <mat-icon>menu</mat-icon>
         </button>
@@ -15,8 +23,10 @@
                     (click)="updateExamples(d,$event)">{{d.name}}</button>
         </mat-sidenav>
 
+
+
         <div class="mat-typography">
-            <pv-examples-table></pv-examples-table>
+            <pv-examples-table [paginator]="paginator" #examples></pv-examples-table>
         </div>
     </mat-sidenav-container>
 

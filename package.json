@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "tslint src"
+    "lint": "tslint src",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [],
   "author": "justindujardin",
@@ -71,7 +72,7 @@
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
-    "electron-forge": "^4.1.5",
+    "electron-forge": "4.1.5",
     "electron-prebuilt-compile": "1.7.9",
     "tslint": "^4.2.0",
     "typescript": "~2.1.4"

@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {SQLiteService} from './sqlite.service';
 import {Observable} from 'rxjs/Observable';
 import {ProdigyDataset, ProdigyDatasetRaw} from './prodigy.model';
@@ -12,7 +12,13 @@ import {Subscription} from 'rxjs/Subscription';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, OnDestroy {
-  constructor(private db: SQLiteService, private media: ObservableMedia) {
+
+  public readonly sidenavWidth = 270;
+
+  constructor(
+    private db: SQLiteService,
+    private cdr: ChangeDetectorRef,
+    private media: ObservableMedia) {
     this.db.connect();
     this.datasets$ = this.db.datasets();
   }
@@ -32,6 +38,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.datasets$.subscribe((val) => {
       console.log(val);
     });
+
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
@@ -41,6 +49,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   updateExamples(dataSet: ProdigyDataset, event) {
-    console.log("change to dataset -> " + dataSet.name);
+    console.log('change to dataset -> ' + dataSet.name);
   }
 }

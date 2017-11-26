@@ -14,5 +14,14 @@ mat-sidenav [mat-button] {
     font-size: 14px;
     cursor: pointer;
     transition: color .1s;
+    text-align: start;
+}
 
+mat-paginator {
+    position: fixed;
+    padding: 12px;
+    bottom:0;
+    left:0;
+    right:0;
+    z-index: 2;
 }
