@@ -1,25 +1,46 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {SQLiteService} from './sqlite.service';
+import {Observable} from 'rxjs/Observable';
+import {ProdigyDataset, ProdigyDatasetRaw} from './prodigy.model';
+import 'rxjs/add/operator/map';
+import {MediaChange, ObservableMedia} from '@angular/flex-layout';
+import {Subscription} from 'rxjs/Subscription';
 
 @Component({
-  selector: 'App',
-  template:
-  `<div>
-    <h2>Welcome to {{name}} Angular2!</h2>
-  </div>`
+  selector: 'pv-app',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
-  public readonly name = 'electron-forge';
+export class AppComponent implements OnInit, OnDestroy {
+  constructor(private db: SQLiteService, private media: ObservableMedia) {
+    this.db.connect();
+    this.datasets$ = this.db.datasets();
+  }
+
+  public datasets$: Observable<ProdigyDatasetRaw[]>;
+
+  compact = false;
+
+  private _mediaSubscription: Subscription;
 
   ngOnInit(): void {
-    console.log('component initialized');
+    this.compact = (this.media.isActive('xs') || this.media.isActive('sm') || this.media.isActive('md'));
+    this._mediaSubscription = this.media.subscribe((change: MediaChange) => {
+      this.compact = (change.mqAlias === 'xs' || change.mqAlias === 'sm' || change.mqAlias === 'sm');
+    });
+
+    this.datasets$.subscribe((val) => {
+      console.log(val);
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this._mediaSubscription) {
+      this._mediaSubscription.unsubscribe();
+    }
+  }
+
+  updateExamples(dataSet: ProdigyDataset, event) {
+    console.log("change to dataset -> " + dataSet.name);
   }
 }
-
-@NgModule({
-  imports: [BrowserModule],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }

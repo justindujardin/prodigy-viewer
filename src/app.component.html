@@ -1,0 +1,23 @@
+<div fxFlexFill fxLayout="column">
+    <mat-toolbar color="primary">
+        <button mat-icon-button (click)="sidenav.toggle()">
+            <mat-icon>menu</mat-icon>
+        </button>
+        <span>Prodigy Viewer</span>
+    </mat-toolbar>
+    <mat-sidenav-container fxFlex>
+        <mat-sidenav #sidenav
+                     mode="{{compact?'over':'side'}}"
+                     opened="{{!compact}}"
+                     disableClose="{{!compact}}"
+                     fxLayout="column" class="mat-elevation-z2">
+            <button mat-button *ngFor="let d of datasets$ | async"
+                    (click)="updateExamples(d,$event)">{{d.name}}</button>
+        </mat-sidenav>
+
+        <div class="mat-typography">
+            <pv-examples-table></pv-examples-table>
+        </div>
+    </mat-sidenav-container>
+
+</div>

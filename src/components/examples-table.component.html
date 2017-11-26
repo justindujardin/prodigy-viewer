@@ -1,0 +1,49 @@
+<mat-table #table [dataSource]="dataSource" matSort>
+
+    <!--- Note that these columns can be defined in any order.
+          The actual rendered columns are set as a property on the row definition" -->
+
+    <!-- ID Column -->
+    <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef fxFlex="60px"> ID</mat-header-cell>
+        <mat-cell *matCellDef="let row" fxFlex="60px"> {{row.id}}</mat-cell>
+    </ng-container>
+
+    <!-- Entry Text -->
+    <ng-container matColumnDef="text">
+        <mat-header-cell *matHeaderCellDef> Text</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{row.content?.text}}</mat-cell>
+    </ng-container>
+
+    <!-- User Answer -->
+    <ng-container matColumnDef="answer">
+        <mat-header-cell *matHeaderCellDef mat-sort-header fxFlex="100px"> Answer</mat-header-cell>
+        <mat-cell *matCellDef="let row" fxFlex="100px">
+            <mat-select placeholder="User Answer"
+                        [value]="row.content?.answer"
+                        (selectionChange)="updateAnswer(row, $event)">
+                <mat-option
+                        *ngFor="let answer of ['accept','reject','ignore']"
+                        [value]="answer">
+                    {{ answer[0].toUpperCase() + answer.slice(1) }}
+                </mat-option>
+            </mat-select>
+        </mat-cell>
+    </ng-container>
+
+    <!-- Meta Column -->
+    <!--<ng-container matColumnDef="meta">-->
+    <!--<mat-header-cell *matHeaderCellDef> Meta</mat-header-cell>-->
+    <!--<mat-cell *matCellDef="let row"> {{row.content?.meta}}</mat-cell>-->
+    <!--</ng-container>-->
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>
+
+<mat-paginator #paginator
+               [length]="dataSource?.count$ | async"
+               [pageIndex]="0"
+               [pageSize]="25"
+               [pageSizeOptions]="[5, 10, 25, 100]">
+</mat-paginator>
