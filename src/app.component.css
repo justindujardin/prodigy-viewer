@@ -2,6 +2,8 @@
 
 mat-sidenav {
     width: 270px;
+    /* Bottom bar height */
+    padding-bottom: 80px;
 }
 
 mat-sidenav [mat-button] {
@@ -24,4 +26,5 @@ mat-paginator {
     left:0;
     right:0;
     z-index: 2;
+    background-color: #f3f3f3;
 }

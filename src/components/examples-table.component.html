@@ -3,12 +3,6 @@
     <!--- Note that these columns can be defined in any order.
           The actual rendered columns are set as a property on the row definition" -->
 
-    <!-- ID Column -->
-    <ng-container matColumnDef="id">
-        <mat-header-cell *matHeaderCellDef fxFlex="60px"> ID</mat-header-cell>
-        <mat-cell *matCellDef="let row" fxFlex="60px"> {{row.id}}</mat-cell>
-    </ng-container>
-
     <!-- Entry Text -->
     <ng-container matColumnDef="text">
         <mat-header-cell *matHeaderCellDef> Text</mat-header-cell>
@@ -17,9 +11,12 @@
 
     <!-- User Answer -->
     <ng-container matColumnDef="answer">
-        <mat-header-cell *matHeaderCellDef mat-sort-header fxFlex="100px"> Answer</mat-header-cell>
-        <mat-cell *matCellDef="let row" fxFlex="100px">
+        <mat-header-cell *matHeaderCellDef mat-sort-header fxFlex="80px"> Answer</mat-header-cell>
+        <mat-cell *matCellDef="let row" fxFlex="80px">
             <mat-select placeholder="User Answer"
+                        [class.ignore]="row.content?.answer=='ignore'"
+                        [class.accept]="row.content?.answer=='accept'"
+                        [class.reject]="row.content?.answer=='reject'"
                         [value]="row.content?.answer"
                         (selectionChange)="updateAnswer(row, $event)">
                 <mat-option
@@ -30,12 +27,6 @@
             </mat-select>
         </mat-cell>
     </ng-container>
-
-    <!-- Meta Column -->
-    <!--<ng-container matColumnDef="meta">-->
-    <!--<mat-header-cell *matHeaderCellDef> Meta</mat-header-cell>-->
-    <!--<mat-cell *matCellDef="let row"> {{row.content?.meta}}</mat-cell>-->
-    <!--</ng-container>-->
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>

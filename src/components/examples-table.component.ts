@@ -1,15 +1,14 @@
-import {AfterViewInit, ChangeDetectorRef, Component, Input, ViewChild} from '@angular/core';
-import {MatPaginator, MatSnackBar, MatSort} from '@angular/material';
+import {AfterViewInit, ChangeDetectorRef, Component, Input, ViewChild, ViewEncapsulation} from '@angular/core';
+import {MatPaginator, MatSnackBar, MatSnackBarRef, MatSort, SimpleSnackBar} from '@angular/material';
 import 'rxjs/add/operator/startWith';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import {ProdigyExamplesDataSource} from '../data-source/examples';
 import {SQLiteService} from '../sqlite.service';
-import {ProdigyDataset, ProdigyExample} from '../prodigy.model';
-
+import {ProdigyAnswer, ProdigyDataset, ProdigyExample} from '../prodigy.model';
 
 /** return a verb representation of the given answer value */
-export function verbify(answer: string, capitalize = true): string {
+export function verbify(answer: string = '', capitalize = true): string {
   answer = answer.toLowerCase();
   const isIgnore = answer === 'ignore';
   if (capitalize) {
@@ -17,7 +16,6 @@ export function verbify(answer: string, capitalize = true): string {
   }
   return `${answer}${isIgnore ? 'd' : 'ed'}`;
 }
-
 
 /**
  * @title Table with pagination
@@ -27,9 +25,10 @@ export function verbify(answer: string, capitalize = true): string {
   selector: 'pv-examples-table',
   styleUrls: ['./examples-table.component.css'],
   templateUrl: './examples-table.component.html',
+  encapsulation: ViewEncapsulation.None,
 })
 export class ExamplesTableComponent implements AfterViewInit {
-  displayedColumns = ['id', 'text', 'answer'];
+  displayedColumns = ['text', 'answer'];
   public dataSource: ProdigyExamplesDataSource | null;
 
   constructor(
@@ -64,14 +63,42 @@ export class ExamplesTableComponent implements AfterViewInit {
     if (!row || !row.content) {
       return;
     }
-    console.log('set row => ' + JSON.stringify(row, null, 2));
-    console.log('        => ' + JSON.stringify(Object.keys(event), null, 2));
+    // console.log('set row => ' + JSON.stringify(row, null, 2));
+    // console.log('        => ' + JSON.stringify(Object.keys(event), null, 2));
     const to = verbify(event.value);
     const from = verbify(row.content.answer);
-    this.snackBar.open(
-      `Changed "${row.content.text}" from "${from}" to "${to}"`,
+    const snackRef: MatSnackBarRef<SimpleSnackBar> = this.snackBar.open(
+      `CHANGED "${row.content.text}" from "${from}" to "${to}"`,
       'UNDO',
       {duration: 7000}
     );
+
+    snackRef.onAction().subscribe(() => {
+      const revert: ProdigyExample = JSON.parse(JSON.stringify(row));
+      revert.content.answer = event.value as ProdigyAnswer;
+
+      this.sql.updateExample(revert)
+        .then(() => {
+          this.snackBar.open(
+            `REVERTED change to "${row.content.text}" from "${to}" to "${from}"`,
+            undefined,
+            {duration: 2000}
+          );
+        })
+        .catch((e) => {
+          this.snackBar.open(
+            `FAILED to revert change with error: ${e}`,
+            undefined,
+            {duration: 2000}
+          );
+          console.error(e);
+        });
+    });
+
+    const clone: ProdigyExample = JSON.parse(JSON.stringify(row));
+    clone.content.answer = event.value as ProdigyAnswer;
+    this.sql.updateExample(clone).catch((e) => {
+      console.error(e);
+    });
   }
 }

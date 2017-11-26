@@ -14,8 +14,6 @@ import 'rxjs/add/operator/take';
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  public readonly sidenavWidth = 270;
-
   constructor(
     private db: SQLiteService,
     private cdr: ChangeDetectorRef,
@@ -54,6 +52,5 @@ export class AppComponent implements OnInit, OnDestroy {
 
   updateExamples(dataSet: ProdigyDataset) {
     this.active = dataSet;
-    console.log('change to dataset -> ' + dataSet.name);
   }
 }

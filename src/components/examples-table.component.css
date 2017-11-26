@@ -7,3 +7,13 @@ mat-table {
     /* mat-paginator = 56 + (12 * 2) = 80  */
     padding-bottom: 80px;
 }
+
+mat-cell > mat-select.accept > .mat-select-trigger > .mat-select-value {
+    color: green;
+    opacity:0.87;
+}
+
+mat-cell > mat-select.reject > .mat-select-trigger > .mat-select-value {
+    color: red;
+    opacity:0.87;
+}

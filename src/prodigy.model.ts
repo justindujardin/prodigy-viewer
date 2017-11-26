@@ -1,3 +1,4 @@
+export type ProdigyAnswer = 'reject' | 'accept' | 'ignore';
 /**
  * Metadata object for example entries
  */
@@ -19,7 +20,7 @@ export interface ProdigyExampleRaw extends ProdigyExampleBase {
 export interface ProdigyExampleT<T extends ProdigyExampleMeta> extends ProdigyExampleBase {
   content: {
     text: string;
-    answer: 'reject' | 'accept' | 'ignore';
+    answer: ProdigyAnswer;
     meta: T;
     '_input_hash': number;
     '_task_hash': number;
