@@ -5,7 +5,7 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import {ProdigyExamplesDataSource} from '../data-source/examples';
 import {SQLiteService} from '../sqlite.service';
-import {ProdigyExample} from '../prodigy.model';
+import {ProdigyDataset, ProdigyExample} from '../prodigy.model';
 
 
 /** return a verb representation of the given answer value */
@@ -42,8 +42,21 @@ export class ExamplesTableComponent implements AfterViewInit {
 
   @Input() paginator: MatPaginator;
 
+  private _dataset: ProdigyDataset;
+  @Input() set dataset(value: ProdigyDataset) {
+    if (value && this._dataset && value.id === this._dataset.id) {
+      return;
+    }
+    this._dataset = value;
+
+    // HACK: change after check exception workaround...
+    setTimeout(() => {
+      this.dataSource = new ProdigyExamplesDataSource(this._dataset, this.sql, this.paginator);
+      this.cdr.detectChanges();
+    }, 0);
+  }
+
   ngAfterViewInit() {
-    this.dataSource = new ProdigyExamplesDataSource(this.sql, this.paginator);
     this.cdr.detectChanges();
   }
 

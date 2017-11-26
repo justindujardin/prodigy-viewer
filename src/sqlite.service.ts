@@ -73,15 +73,26 @@ export class SQLiteService {
       });
     });
   }
-  examples(): Observable<ProdigyExample[]> {
-    return this.queryAll('SELECT * FROM example').map((items: ProdigyExampleRaw[]) => {
-      return items.map((item: ProdigyExampleRaw) => {
-        return {
-          ...item,
-          content: JSON.parse('' + item.content)
-        };
+
+  /**
+   * Get annotation examples for one or all datasets
+   * @param datasetId A specific dataset to filter examples to
+   */
+  examples(datasetId: number = -1): Observable<ProdigyExample[]> {
+    const query = `SELECT example.* FROM dataset 
+  INNER JOIN link ON link.dataset_id = dataset.id
+  INNER JOIN example ON example.id = link.example_id
+WHERE dataset.id = '${datasetId}';`;
+
+    return this.queryAll(datasetId === -1 ? 'SELECT * FROM example;' : query)
+      .map((items: ProdigyExampleRaw[]) => {
+        return items.map((item: ProdigyExampleRaw) => {
+          return {
+            ...item,
+            content: JSON.parse('' + item.content)
+          };
+        });
       });
-    });;
   }
 
   private queryOne<T>(query: string): Observable<T> {

@@ -1,10 +1,11 @@
 import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {SQLiteService} from './sqlite.service';
 import {Observable} from 'rxjs/Observable';
-import {ProdigyDataset, ProdigyDatasetRaw} from './prodigy.model';
+import {ProdigyDataset} from './prodigy.model';
 import 'rxjs/add/operator/map';
 import {MediaChange, ObservableMedia} from '@angular/flex-layout';
 import {Subscription} from 'rxjs/Subscription';
+import 'rxjs/add/operator/take';
 
 @Component({
   selector: 'pv-app',
@@ -23,7 +24,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.datasets$ = this.db.datasets();
   }
 
-  public datasets$: Observable<ProdigyDatasetRaw[]>;
+  public datasets$: Observable<ProdigyDataset[]>;
+
+  public active: ProdigyDataset | null = null;
 
   compact = false;
 
@@ -35,7 +38,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.compact = (change.mqAlias === 'xs' || change.mqAlias === 'sm' || change.mqAlias === 'sm');
     });
 
-    this.datasets$.subscribe((val) => {
+    this.datasets$.take(1).subscribe((val: ProdigyDataset[]) => {
+      this.active = val[0];
       console.log(val);
     });
 
@@ -48,7 +52,8 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateExamples(dataSet: ProdigyDataset, event) {
+  updateExamples(dataSet: ProdigyDataset) {
+    this.active = dataSet;
     console.log('change to dataset -> ' + dataSet.name);
   }
 }
