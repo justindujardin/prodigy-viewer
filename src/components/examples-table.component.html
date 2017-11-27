@@ -2,10 +2,15 @@
 
     <!--- Note that these columns can be defined in any order.
           The actual rendered columns are set as a property on the row definition" -->
+    <!-- ID Column -->
+    <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header fxFlex="60px"> ID</mat-header-cell>
+        <mat-cell *matCellDef="let row" fxFlex="60px"> {{row.id}}</mat-cell>
+    </ng-container>
 
     <!-- Entry Text -->
     <ng-container matColumnDef="text">
-        <mat-header-cell *matHeaderCellDef> Text</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header> Text</mat-header-cell>
         <mat-cell *matCellDef="let row">{{row.content?.text}}</mat-cell>
     </ng-container>
 

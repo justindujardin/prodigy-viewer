@@ -1,5 +1,5 @@
 <mat-paginator #paginator
-               class="mat-elevation-z2"
+               class="mat-elevation-z4"
                [length]="examples.dataSource?.count$ | async"
                [pageIndex]="0"
                [pageSize]="25"
@@ -11,7 +11,15 @@
         <button mat-icon-button (click)="sidenav.toggle()">
             <mat-icon>menu</mat-icon>
         </button>
-        <span>Prodigy Viewer</span>
+        <span fxFlex>Prodigy Viewer</span>
+        <mat-form-field floatPlaceholder="never">
+            <input matInput #filter type="text" placeholder="Filter results"/>
+            <button mat-button *ngIf="filter.value"
+                    matSuffix mat-icon-button aria-label="Clear"
+                    (click)="examples.clearSearch()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
     </mat-toolbar>
     <mat-sidenav-container fxFlex>
         <mat-sidenav #sidenav
@@ -20,14 +28,15 @@
                      disableClose="{{!compact}}"
                      fxLayout="column" class="mat-elevation-z2">
             <button mat-button *ngFor="let d of datasets$ | async"
-                    (click)="updateExamples(d,$event)">{{d.name}}</button>
+                    (click)="updateExamples(d,$event)">{{d.name}}
+            </button>
         </mat-sidenav>
-
 
 
         <div class="mat-typography">
             <pv-examples-table
                     [dataset]="active"
+                    [filter]="filter"
                     [paginator]="paginator" #examples></pv-examples-table>
         </div>
     </mat-sidenav-container>

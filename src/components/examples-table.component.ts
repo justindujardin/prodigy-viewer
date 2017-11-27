@@ -3,9 +3,13 @@ import {MatPaginator, MatSnackBar, MatSnackBarRef, MatSort, SimpleSnackBar} from
 import 'rxjs/add/operator/startWith';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/distinctUntilChanged';
 import {ProdigyExamplesDataSource} from '../data-source/examples';
 import {SQLiteService} from '../sqlite.service';
 import {ProdigyAnswer, ProdigyDataset, ProdigyExample} from '../prodigy.model';
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/fromEvent';
 
 /** return a verb representation of the given answer value */
 export function verbify(answer: string = '', capitalize = true): string {
@@ -40,7 +44,7 @@ export class ExamplesTableComponent implements AfterViewInit {
   @ViewChild(MatSort) sort: MatSort;
 
   @Input() paginator: MatPaginator;
-
+  @Input() filter: HTMLInputElement;
   private _dataset: ProdigyDataset;
   @Input() set dataset(value: ProdigyDataset) {
     if (value && this._dataset && value.id === this._dataset.id) {
@@ -50,13 +54,32 @@ export class ExamplesTableComponent implements AfterViewInit {
 
     // HACK: change after check exception workaround...
     setTimeout(() => {
-      this.dataSource = new ProdigyExamplesDataSource(this._dataset, this.sql, this.paginator);
+      this.dataSource = new ProdigyExamplesDataSource(this._dataset, this.sql, this.paginator, this.sort);
       this.cdr.detectChanges();
     }, 0);
   }
 
   ngAfterViewInit() {
+    Observable.fromEvent(this.filter, 'keyup')
+      .debounceTime(150)
+      .distinctUntilChanged()
+      .subscribe(() => {
+        if (!this.dataSource) {
+          return;
+        }
+        this.dataSource.filter = this.filter.value;
+      });
     this.cdr.detectChanges();
+  }
+
+  clearSearch() {
+    if (this.dataSource) {
+      this.dataSource.filter = '';
+    }
+    if (this.filter) {
+      this.filter.value = '';
+      this.filter.blur();
+    }
   }
 
   updateAnswer(row: ProdigyExample, event: { source: any, value: string }) {

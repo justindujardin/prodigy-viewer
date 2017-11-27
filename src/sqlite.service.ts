@@ -1,29 +1,13 @@
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/do';
-import * as sqlite3 from 'sqlite3';
 import {Injectable, NgZone} from '@angular/core';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
 import {ProdigyDataset, ProdigyDatasetRaw, ProdigyExample, ProdigyExampleRaw} from './prodigy.model';
 import {Subscriber} from 'rxjs/Subscriber';
 import {Subject} from 'rxjs/Subject';
-
-function qbDatasetFromExampleId(id: string): string {
-  return `
-  SELECT
-    dataset.name as Dataset,
-    example.content as Content
-  FROM dataset 
-  INNER JOIN link ON link.dataset_id = dataset.id
-  INNER JOIN example ON example.id = link.example_id
-    WHERE example.id = ${id};
-  `;
-}
-
-function qbDatasetIdFromName(datasetName: string): string {
-  return `SELECT dataset.id FROM dataset WHERE dataset.name = '${datasetName}';`;
-}
+import * as sqlite3 from 'sqlite3';
 
 @Injectable()
 export class SQLiteService {
@@ -73,7 +57,7 @@ export class SQLiteService {
    * @returns {Observable<R>}
    */
   datasets(sessions = false): Observable<ProdigyDataset[]> {
-    return this.queryAll(`SELECT * FROM dataset ${sessions ? '' : 'WHERE session=0'}`)
+    return this._queryAll(`SELECT * FROM dataset ${sessions ? '' : 'WHERE session=0'}`)
       .map((items: ProdigyDatasetRaw[]) => items.map((set: ProdigyDatasetRaw) => {
         return {
           ...set,
@@ -92,7 +76,7 @@ export class SQLiteService {
   INNER JOIN example ON example.id = link.example_id
 WHERE dataset.id = '${datasetId}';`;
 
-    return this.queryAll(datasetId === -1 ? 'SELECT * FROM example;' : query)
+    return this._queryAll(datasetId === -1 ? 'SELECT * FROM example;' : query)
       .map((items: ProdigyExampleRaw[]) => {
         return items.map((item: ProdigyExampleRaw) => {
           return {
@@ -103,7 +87,30 @@ WHERE dataset.id = '${datasetId}';`;
       });
   }
 
-  private queryOne<T>(query: string): Observable<T> {
+  /**
+   * Update an example item in Prodigy.
+   * @param example The example data to update.
+   * @returns {Promise<void>} a promise that resolves when the query has run, and rejects if there is an error.
+   */
+  updateExample(example: ProdigyExample): Promise<void> {
+    const json = JSON.stringify(example.content);
+    const query = `UPDATE example SET content = '${json}' WHERE id = ${example.id};`;
+    return new Promise<void>((resolve, reject) => {
+      this.db.run(query, (err: Error) => {
+        this.zone.run(() => {
+          if (err) {
+            reject(`queryAll failed: \n   ${query}\mWith error:\n   ${err}`);
+            return;
+          }
+          resolve();
+          // The example table was changed.
+          this.tableUpdated$.next('example');
+        });
+      });
+    });
+  }
+
+  private _queryOne<T>(query: string): Observable<T> {
     return new Observable<T>((subscriber: Subscriber<T>) => {
       this.db.get(query, (err: Error, row: T) => {
         this.zone.run(() => {
@@ -122,7 +129,7 @@ WHERE dataset.id = '${datasetId}';`;
     });
   }
 
-  private queryEach<T>(query: string): Observable<T> {
+  private _queryEach<T>(query: string): Observable<T> {
     return new Observable<T>((subscriber: Subscriber<T>) => {
       this.db.each(query, (err: Error, row: T) => {
         this.zone.run(() => {
@@ -141,7 +148,7 @@ WHERE dataset.id = '${datasetId}';`;
     });
   }
 
-  private queryAll<T>(query: string): Observable<T[]> {
+  private _queryAll<T>(query: string): Observable<T[]> {
     return new Observable<T[]>((subscriber: Subscriber<T[]>) => {
       const queryAndEmit = () => {
         this.db.all(query, (err: Error, rows: T[]) => {
@@ -165,24 +172,6 @@ WHERE dataset.id = '${datasetId}';`;
       return () => {
         subscription.unsubscribe();
       };
-    });
-  }
-
-  updateExample(content: ProdigyExample): Promise<void> {
-    const json = JSON.stringify(content.content);
-    const query = `UPDATE example SET content = '${json}' WHERE id = ${content.id};`;
-    return new Promise<void>((resolve, reject) => {
-      this.db.run(query, (err: Error) => {
-        this.zone.run(() => {
-          if (err) {
-            reject(`queryAll failed: \n   ${query}\mWith error:\n   ${err}`);
-            return;
-          }
-          resolve();
-          // The example table was changed.
-          this.tableUpdated$.next('example');
-        });
-      });
     });
   }
 }

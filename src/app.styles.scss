@@ -1,0 +1,59 @@
+@import 'node_modules/@angular/material/theming.scss';
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue.
+//$theme-primary: mat-palette($mat-teal);
+//$bz-color-accent:  mat-palette($mat-green);
+//$theme-accent:  mat-palette($mat-light-blue, 500, 200, 700);
+
+$theme-primary: mat-palette($mat-deep-purple, 700, 500, 900);
+
+$theme-accent:  mat-palette($mat-yellow);
+
+$theme-warn:    mat-palette($mat-red);
+
+// The warn palette is optional (defaults to red).
+//$theme-warn:    mat-palette($mat-red);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$theme: mat-light-theme($theme-primary, $theme-accent, $theme-warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($theme);
+
+mat-sidenav {
+  width: 270px;
+  /* Bottom bar height */
+  padding-bottom: 80px;
+  [mat-button] {
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    position: relative;
+    padding: 0 24px 0 36px;
+    text-decoration: none;
+    height: 48px;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color .1s;
+    text-align: start;
+  }
+}
+
+mat-paginator {
+  position: fixed;
+  padding: 12px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background-color: #fafafe;
+  border-top: 1px solid #dedede;
+}
