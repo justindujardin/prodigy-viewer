@@ -1,0 +1,29 @@
+mat-sidenav {
+    width: 270px;
+    /* Bottom bar height */
+    padding-bottom: 80px;
+}
+
+mat-sidenav [mat-button] {
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    position: relative;
+    padding: 0 24px 0 36px;
+    text-decoration: none;
+    height: 48px;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color .1s;
+    text-align: start;
+}
+
+mat-paginator {
+    position: fixed;
+    padding: 12px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    background-color: #fafafe;
+    border-top: 1px solid #dedede;
+}

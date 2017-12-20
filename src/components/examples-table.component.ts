@@ -1,15 +1,9 @@
 import {AfterViewInit, ChangeDetectorRef, Component, Input, ViewChild, ViewEncapsulation} from '@angular/core';
 import {MatPaginator, MatSnackBar, MatSnackBarRef, MatSort, SimpleSnackBar} from '@angular/material';
-import 'rxjs/add/operator/startWith';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
 import {ProdigyExamplesDataSource} from '../data-source/examples';
 import {SQLiteService} from '../sqlite.service';
 import {ProdigyAnswer, ProdigyDataset, ProdigyExample} from '../prodigy.model';
 import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/observable/fromEvent';
 
 /** return a verb representation of the given answer value */
 export function verbify(answer: string = '', capitalize = true): string {

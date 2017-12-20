@@ -1,5 +1,5 @@
-import { app, BrowserWindow } from 'electron';
-import { enableLiveReload } from 'electron-compile';
+import {app, BrowserWindow, ipcMain, dialog} from 'electron';
+import {enableLiveReload} from 'electron-compile';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -30,6 +30,13 @@ const createWindow = async () => {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+  });
+
+  // In main process.
+  ipcMain.on('open-db', (event: any, data: any) => {
+    console.log('TODO: dot dot dot');
+    console.log(dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}))
+    event.sender.send('asynchronous-reply', 'pong');
   });
 };
 

@@ -4,7 +4,7 @@ import 'rxjs/add/operator/do';
 import {Injectable, NgZone} from '@angular/core';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Observable} from 'rxjs/Observable';
-import {ProdigyDataset, ProdigyDatasetRaw, ProdigyExample, ProdigyExampleRaw} from './prodigy.model';
+import {ProdigyAnswer, ProdigyDataset, ProdigyDatasetRaw, ProdigyExample, ProdigyExampleRaw} from './prodigy.model';
 import {Subscriber} from 'rxjs/Subscriber';
 import {Subject} from 'rxjs/Subject';
 import * as sqlite3 from 'sqlite3';
@@ -92,21 +92,74 @@ WHERE dataset.id = '${datasetId}';`;
    * @param example The example data to update.
    * @returns {Promise<void>} a promise that resolves when the query has run, and rejects if there is an error.
    */
-  updateExample(example: ProdigyExample): Promise<void> {
+  updateExample(example: ProdigyExample): Promise<ProdigyExample> {
+    // SQLite wants single quotes escaped by doubling them up.
+    // See: https://stackoverflow.com/questions/603572/how-to-properly-escape-a-single-quote-for-a-sqlite-database
+    example.content.text = example.content.text.replace(/'/g, '\'\'');
     const json = JSON.stringify(example.content);
-    const query = `UPDATE example SET content = '${json}' WHERE id = ${example.id};`;
-    return new Promise<void>((resolve, reject) => {
+    return this.promiseRun(`UPDATE example SET content = '${json}' WHERE id = ${example.id};`)
+      .then(() => {
+        // The example table was changed.
+        this.tableUpdated$.next('example');
+        return example;
+      });
+  }
+
+  promiseRun(query: string): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
       this.db.run(query, (err: Error) => {
         this.zone.run(() => {
           if (err) {
-            reject(`queryAll failed: \n   ${query}\mWith error:\n   ${err}`);
+            reject(`promiseRun failed: \n   ${query}\mWith error:\n   ${err}`);
             return;
           }
           resolve();
-          // The example table was changed.
-          this.tableUpdated$.next('example');
         });
       });
+    });
+  }
+
+  /**
+   * Remove all examples with the given answer from a dataset
+   * @param datasetId The dataset to operate on by ID
+   * @param answer one of "accept", "reject" or "ignore"
+   * @returns A promise that resolves with the examples that were removed.
+   */
+  removeExamples(datasetId: number, answer: ProdigyAnswer = 'ignore'): Promise<ProdigyExample[]> {
+    return new Promise<ProdigyExample[]>((resolve, reject) => {
+      this.examples(datasetId)
+        .first()
+        .subscribe((examples: ProdigyExample[]) => {
+          const toRemove = examples.filter((example) => example.content.answer === answer);
+          const promises = toRemove.map((example: ProdigyExample) => {
+            return Promise.all([
+              this.promiseRun(`DELETE FROM example WHERE id=${example.id}`),
+              this.promiseRun(`DELETE FROM link WHERE example_id=${example.id} and dataset_id=${datasetId}`),
+            ]);
+          });
+          Promise.all(promises).then(() => resolve(toRemove)).catch(reject);
+        });
+    });
+  }
+
+  /**
+   * Remove all examples with the answer "ignore" from a dataset
+   * @param datasetId The dataset to operate on by ID
+   * @param from The label to find
+   * @param to What to replace it with
+   */
+  replaceLabel(datasetId: number, from: string, to: string): Promise<ProdigyExample[]> {
+    return new Promise<ProdigyExample[]>((resolve, reject) => {
+      this.examples(datasetId)
+        .first()
+        .subscribe((examples: ProdigyExample[]) => {
+          const toRemove = examples.filter((example) => example.content.label === from);
+          const promises = toRemove.map((example: ProdigyExample) => {
+            example.content.label = to;
+            return this.updateExample(example);
+          });
+          Promise.all(promises).then(resolve).catch(reject);
+        });
     });
   }
 
