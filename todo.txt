@@ -1,0 +1,8 @@
+- filtering examples view
+- sorting examples view
+- load/close db welcome page
+- undo/redo via audit table?
+- sidenav item styles
+
+- table/db cleanups
+ - drop sessions

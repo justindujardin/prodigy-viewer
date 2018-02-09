@@ -12,8 +12,8 @@ if (isDevMode) enableLiveReload();
 const createWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 768,
   });
 
   // and load the index.html of the app.
@@ -21,7 +21,7 @@ const createWindow = async () => {
 
   // Open the DevTools.
   if (isDevMode) {
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   }
 
   // Emitted when the window is closed.

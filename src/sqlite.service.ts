@@ -24,7 +24,7 @@ export class SQLiteService {
   /** Emits when a table's data has been invalidated by an update */
   tableUpdated$: Subject<string> = new Subject<string>();
 
-  connect(file: string = './example/prodigy.db') {
+  connect(file: string = 'prodigy.db') {
     // sqlite3.verbose();
 
     // // For debug. Turn off to ship something?
@@ -57,7 +57,7 @@ export class SQLiteService {
    * @returns {Observable<R>}
    */
   datasets(sessions = false): Observable<ProdigyDataset[]> {
-    return this._queryAll(`SELECT * FROM dataset ${sessions ? '' : 'WHERE session=0'}`)
+    return this.queryAll(`SELECT * FROM dataset ${sessions ? '' : 'WHERE session=0'}`)
       .map((items: ProdigyDatasetRaw[]) => items.map((set: ProdigyDatasetRaw) => {
         return {
           ...set,
@@ -76,7 +76,7 @@ export class SQLiteService {
   INNER JOIN example ON example.id = link.example_id
 WHERE dataset.id = '${datasetId}';`;
 
-    return this._queryAll(datasetId === -1 ? 'SELECT * FROM example;' : query)
+    return this.queryAll(datasetId === -1 ? 'SELECT * FROM example;' : query)
       .map((items: ProdigyExampleRaw[]) => {
         return items.map((item: ProdigyExampleRaw) => {
           return {
@@ -96,6 +96,12 @@ WHERE dataset.id = '${datasetId}';`;
     // SQLite wants single quotes escaped by doubling them up.
     // See: https://stackoverflow.com/questions/603572/how-to-properly-escape-a-single-quote-for-a-sqlite-database
     example.content.text = example.content.text.replace(/'/g, '\'\'');
+    const arg: any = example.content;
+    // Ugh, metadata with single quotes can fuck stuff up. May need to iterate the whole example and escape all found
+    // strings before update.
+    if (arg.hasOwnProperty('html')) {
+      delete arg['html'];
+    }
     const json = JSON.stringify(example.content);
     return this.promiseRun(`UPDATE example SET content = '${json}' WHERE id = ${example.id};`)
       .then(() => {
@@ -120,17 +126,17 @@ WHERE dataset.id = '${datasetId}';`;
   }
 
   /**
-   * Remove all examples with the given answer from a dataset
+   * Remove all examples that are matched by the given matcher function
    * @param datasetId The dataset to operate on by ID
-   * @param answer one of "accept", "reject" or "ignore"
+   * @param matcher A function that takes in an example and returns true if it should be removed.
    * @returns A promise that resolves with the examples that were removed.
    */
-  removeExamples(datasetId: number, answer: ProdigyAnswer = 'ignore'): Promise<ProdigyExample[]> {
+  removeExamples(datasetId: number, matcher: (example: ProdigyExample) => boolean): Promise<ProdigyExample[]> {
     return new Promise<ProdigyExample[]>((resolve, reject) => {
       this.examples(datasetId)
         .first()
         .subscribe((examples: ProdigyExample[]) => {
-          const toRemove = examples.filter((example) => example.content.answer === answer);
+          const toRemove = examples.filter(matcher);
           const promises = toRemove.map((example: ProdigyExample) => {
             return Promise.all([
               this.promiseRun(`DELETE FROM example WHERE id=${example.id}`),
@@ -143,7 +149,27 @@ WHERE dataset.id = '${datasetId}';`;
   }
 
   /**
-   * Remove all examples with the answer "ignore" from a dataset
+   * Remove all examples with the given answer from a dataset
+   * @param datasetId The dataset to operate on by ID
+   * @param answer one of "accept", "reject" or "ignore"
+   * @returns A promise that resolves with the examples that were removed.
+   */
+  removeExamplesByAnswer(datasetId: number, answer: ProdigyAnswer = 'ignore'): Promise<ProdigyExample[]> {
+    return this.removeExamples(datasetId, (example) => example.content.answer === answer);
+  }
+
+  /**
+   * Remove all examples with the given answer from a dataset
+   * @param datasetId The dataset to operate on by ID
+   * @param label the string label to match
+   * @returns A promise that resolves with the examples that were removed.
+   */
+  removeExamplesByLabel(datasetId: number, label: string): Promise<ProdigyExample[]> {
+    return this.removeExamples(datasetId, (example) => example.content.label === label);
+  }
+
+  /**
+   * Replace all labels that match "from" with "to"
    * @param datasetId The dataset to operate on by ID
    * @param from The label to find
    * @param to What to replace it with
@@ -163,45 +189,7 @@ WHERE dataset.id = '${datasetId}';`;
     });
   }
 
-  private _queryOne<T>(query: string): Observable<T> {
-    return new Observable<T>((subscriber: Subscriber<T>) => {
-      this.db.get(query, (err: Error, row: T) => {
-        this.zone.run(() => {
-          if (err) {
-            subscriber.error(`queryOne failed: \n   ${query}\mWith error:\n   ${err}`);
-            subscriber.complete();
-            return;
-          }
-          subscriber.next(row);
-          subscriber.complete();
-        });
-      });
-      return () => {
-        // nada
-      };
-    });
-  }
-
-  private _queryEach<T>(query: string): Observable<T> {
-    return new Observable<T>((subscriber: Subscriber<T>) => {
-      this.db.each(query, (err: Error, row: T) => {
-        this.zone.run(() => {
-          if (err) {
-            subscriber.error(`queryEach failed: \n   ${query}\mWith error:\n   ${err}`);
-            subscriber.complete();
-            return;
-          }
-          subscriber.next(row);
-          subscriber.complete();
-        });
-      });
-      return () => {
-        // nada
-      };
-    });
-  }
-
-  private _queryAll<T>(query: string): Observable<T[]> {
+  queryAll<T>(query: string): Observable<T[]> {
     return new Observable<T[]>((subscriber: Subscriber<T[]>) => {
       const queryAndEmit = () => {
         this.db.all(query, (err: Error, rows: T[]) => {

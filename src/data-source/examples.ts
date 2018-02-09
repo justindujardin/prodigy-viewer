@@ -68,8 +68,16 @@ export class ProdigyExamplesDataSource extends DataSource<ProdigyExample> {
     return Observable.combineLatest(items, userChanges).map((tuple) => {
       const data: ProdigyExample[] = tuple[0].slice();
 
+      (this.count$ as BehaviorSubject<number>).next(data.length);
+
       // Filter data
-      this.filteredData = data.slice().filter((item: ProdigyExample) => {
+      this.filteredData = data.filter((item: ProdigyExample) => {
+
+        // HACK: Filter out sense2vec generated examples
+        const shm = item as any;
+        if (shm.content.meta.user === 'jd_sense2vec_gen') {
+          return false;
+        }
         let searchStr = (item.content.text).toLowerCase();
         return searchStr.indexOf(this.filter.toLowerCase()) != -1;
       });
